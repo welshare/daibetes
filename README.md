@@ -1,6 +1,6 @@
-# BioAgents AgentKit
+# dAIbetes Agent based on the BioAgent Framework
 
-An advanced AI agent framework for biological and scientific research. BioAgents provides powerful conversational AI capabilities with specialized knowledge in biology, life sciences, and scientific research methodologies.
+An advanced medical researcher AI agent in the field of diabetes. 
 
 ## Setup
 

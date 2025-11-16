@@ -1,15 +1,15 @@
 import character from "../../character";
+import { getMessagesByConversation } from "../../db/operations";
 import { LLM } from "../../llm/provider";
 import { type Message, type State, type Tool } from "../../types/core";
 import logger from "../../utils/logger";
 import {
   composePromptFromState,
+  endStep,
   formatConversationHistory,
   parseKeyValueXml,
   startStep,
-  endStep,
 } from "../../utils/state";
-import { getMessagesByConversation } from "../../db/operations";
 import { calculateRequestPrice } from "../../x402/pricing";
 
 export const planningTool: Tool = {
@@ -27,15 +27,21 @@ export const planningTool: Tool = {
     // Update state in DB after startStep
     if (state.id) {
       try {
-        console.log('[planning] Updating state after startStep, state.id:', state.id, 'steps:', state.values.steps);
+        logger.debug(
+          {
+            stateId: state.id,
+            steps: state.values.steps,
+          },
+          "[planning] Updating state after startStep",
+        );
         const { updateState } = await import("../../db/operations");
         await updateState(state.id, state.values);
-        console.log('[planning] State updated successfully');
+        logger.debug("[planning] State updated successfully");
       } catch (err) {
         console.error("Failed to update state in DB:", err);
       }
     } else {
-      console.warn('[planning] No state.id available, skipping state update');
+      logger.warn("[planning] No state.id available, skipping state update");
     }
 
     // TODO: idea - instead of providers/actions use a less structured approach, outline steps in 'levels'
@@ -98,7 +104,7 @@ export const planningTool: Tool = {
     const llmRequest = {
       model: planningModel,
       messages,
-      maxTokens: 1024,
+      maxTokens: 5000,
     };
 
     logger.info(`🔵 Planning: Starting LLM request`, {
@@ -109,6 +115,8 @@ export const planningTool: Tool = {
       promptLength: prompt.length,
       userMessageLength: message.question?.length || 0,
     });
+
+    let lastError: Error | null = null;
 
     for (let i = 0; i < MAX_RETRIES; i++) {
       const attemptNumber = i + 1;
@@ -169,21 +177,21 @@ export const planningTool: Tool = {
         const providerList = Array.isArray(providersRaw)
           ? providersRaw
           : typeof providersRaw === "string"
-          ? providersRaw
-              .split(",")
-              .map((p: string) => p.trim())
-              .filter(Boolean)
-          : [];
+            ? providersRaw
+                .split(",")
+                .map((p: string) => p.trim())
+                .filter(Boolean)
+            : [];
 
         const actionsRaw = parsedXmlResponse.actions;
         const actionList = Array.isArray(actionsRaw)
           ? actionsRaw
           : typeof actionsRaw === "string"
-          ? actionsRaw
-              .split(",")
-              .map((a: string) => a.trim())
-              .filter(Boolean)
-          : [];
+            ? actionsRaw
+                .split(",")
+                .map((a: string) => a.trim())
+                .filter(Boolean)
+            : [];
 
         // Initialize estimatedCostsUSD object if it doesn't exist
         if (!state.values.estimatedCostsUSD) {
@@ -251,9 +259,9 @@ export const planningTool: Tool = {
       }
     }
 
-    return {
-      providers: [],
-      actions: [],
-    };
+    const errorMessage = lastError
+      ? `Planning LLM failed after ${MAX_RETRIES} attempts: ${lastError.message}`
+      : `Planning LLM failed after ${MAX_RETRIES} attempts: Unknown error`;
+    throw new Error(errorMessage);
   },
 };
