@@ -1,8 +1,8 @@
 // lib/vectorSearch.ts
 import { createClient } from "@supabase/supabase-js";
 import { CohereClient } from "cohere-ai";
-import logger from "../utils/logger";
 import { SimpleCache } from "../utils/cache";
+import logger from "../utils/logger";
 import { CONFIG } from "./config";
 import { createEmbeddingProvider, type EmbeddingProvider } from "./provider";
 
@@ -69,24 +69,87 @@ export class VectorSearchWithReranker {
     const queryEmbedding =
       await this.embeddingProvider.generateEmbedding(query);
 
-    const { data, error } = await supabase.rpc("match_documents", {
-      query_embedding: queryEmbedding,
-      match_threshold: CONFIG.SIMILARITY_THRESHOLD,
-      match_count: limit,
-    });
+    try {
+      const { data, error } = await supabase.rpc("match_documents", {
+        query_embedding: queryEmbedding,
+        match_threshold: CONFIG.SIMILARITY_THRESHOLD,
+        match_count: limit,
+      });
 
-    if (error) throw error;
+      if (error) {
+        // Check if it's a timeout error
+        if (
+          error.code === "57014" ||
+          error.message?.includes("statement timeout")
+        ) {
+          logger.warn(
+            `⏱️ Vector search timed out for query: "${query}". Trying with reduced limit and threshold...`,
+          );
 
-    const results = data.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      content: doc.content,
-      metadata: doc.metadata,
-      similarity: doc.similarity,
-    }));
+          // Retry with reduced limit and lower threshold for faster query
+          const reducedLimit = Math.max(5, Math.floor(limit / 2));
+          const reducedThreshold = Math.max(
+            0.1,
+            CONFIG.SIMILARITY_THRESHOLD - 0.1,
+          );
 
-    logger.info(`📊 Vector search returned ${results.length} results`);
-    return results;
+          logger.info(
+            `🔄 Retrying with limit=${reducedLimit}, threshold=${reducedThreshold}`,
+          );
+
+          const retryResult = await supabase.rpc("match_documents", {
+            query_embedding: queryEmbedding,
+            match_threshold: reducedThreshold,
+            match_count: reducedLimit,
+          });
+
+          if (retryResult.error) {
+            logger.error(`❌ Vector search retry failed:`, retryResult.error);
+            throw retryResult.error;
+          }
+
+          const results = (retryResult.data || []).map((doc: any) => ({
+            id: doc.id,
+            title: doc.title,
+            content: doc.content,
+            metadata: doc.metadata,
+            similarity: doc.similarity,
+          }));
+
+          logger.info(
+            `📊 Vector search (retry) returned ${results.length} results with reduced parameters`,
+          );
+          return results;
+        }
+
+        throw error;
+      }
+
+      const results = (data || []).map((doc: any) => ({
+        id: doc.id,
+        title: doc.title,
+        content: doc.content,
+        metadata: doc.metadata,
+        similarity: doc.similarity,
+      }));
+
+      logger.info(`📊 Vector search returned ${results.length} results`);
+      return results;
+    } catch (error: any) {
+      // Catch any other errors and provide better logging
+      if (
+        error.code === "57014" ||
+        error.message?.includes("statement timeout")
+      ) {
+        logger.error(
+          `❌ Vector search timed out after retry for query: "${query}"`,
+        );
+        // Return empty array instead of throwing to allow the system to continue
+        logger.warn(`⚠️ Returning empty results due to timeout`);
+        return [];
+      }
+      throw error;
+    }
   }
 
   // Rerank results using Cohere (second stage)
@@ -136,7 +199,8 @@ export class VectorSearchWithReranker {
       logger.error(
         `❌ Reranking failed, falling back to vector search results:`,
         {
-          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          errorType:
+            error instanceof Error ? error.constructor.name : typeof error,
           errorMessage: error instanceof Error ? error.message : String(error),
         },
       );
@@ -181,7 +245,8 @@ export class VectorSearchWithReranker {
     let finalResults: Document[];
 
     // Only use reranking if enabled AND Cohere API key is available
-    const canRerank = useReranking && CONFIG.COHERE_API_KEY && vectorResults.length > 1;
+    const canRerank =
+      useReranking && CONFIG.COHERE_API_KEY && vectorResults.length > 1;
 
     if (canRerank) {
       // Stage 2: Rerank with Cohere
@@ -228,19 +293,26 @@ export class VectorSearchWithReranker {
             const embedding = await this.embeddingProvider.generateEmbedding(
               `${doc.title}\n${doc.content}`,
             );
-            logger.info(`   ✓ Generated embedding for "${doc.title}" (dimension: ${embedding.length})`);
+            logger.info(
+              `   ✓ Generated embedding for "${doc.title}" (dimension: ${embedding.length})`,
+            );
             return {
               ...doc,
               embedding,
             };
           } catch (embeddingError) {
-            logger.error(`   ✗ Failed to generate embedding for "${doc.title}":`, embeddingError);
+            logger.error(
+              `   ✗ Failed to generate embedding for "${doc.title}":`,
+              embeddingError,
+            );
             throw embeddingError;
           }
         }),
       );
 
-      logger.info(`📤 Inserting ${documentsWithEmbeddings.length} documents with embeddings into database...`);
+      logger.info(
+        `📤 Inserting ${documentsWithEmbeddings.length} documents with embeddings into database...`,
+      );
 
       // Use ON CONFLICT DO NOTHING to handle duplicates gracefully (PostgreSQL feature)
       // This prevents errors when documents already exist
@@ -251,20 +323,23 @@ export class VectorSearchWithReranker {
 
       if (error) {
         // Check if it's a duplicate/constraint error - these are acceptable
-        const isDuplicateError = 
-          error.message.includes("duplicate") || 
+        const isDuplicateError =
+          error.message.includes("duplicate") ||
           error.message.includes("unique") ||
           error.code === "23505"; // PostgreSQL unique violation code
-        
+
         if (isDuplicateError) {
-          logger.warn(`⚠️ Some documents in batch already exist (duplicates), continuing...`, {
-            message: error.message,
-            code: error.code,
-          });
+          logger.warn(
+            `⚠️ Some documents in batch already exist (duplicates), continuing...`,
+            {
+              message: error.message,
+              code: error.code,
+            },
+          );
           // Return empty array - duplicates are fine, we'll continue
           return [];
         }
-        
+
         logger.error(`❌ Database insert failed:`, {
           message: error.message,
           details: error.details,
