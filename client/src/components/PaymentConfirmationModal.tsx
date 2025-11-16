@@ -33,12 +33,12 @@ export function PaymentConfirmationModal({
             height: "64px",
             margin: "0 auto 16px",
             borderRadius: "50%",
-            background: "rgba(16, 185, 129, 0.1)",
+            background: "rgba(7, 117, 255, 0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0775ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M12 6v6l4 2"></path>
             </svg>
@@ -71,7 +71,7 @@ export function PaymentConfirmationModal({
             <div style={{ fontSize: "12px", color: "#a1a1a1", marginBottom: "4px" }}>
               Amount
             </div>
-            <div style={{ fontSize: "24px", fontWeight: 600, color: "#10b981" }}>
+            <div style={{ fontSize: "24px", fontWeight: 600, color: "#0775ff" }}>
               ${amount} {currency}
             </div>
           </div>
@@ -136,7 +136,7 @@ export function PaymentConfirmationModal({
             style={{
               flex: 1,
               padding: "12px",
-              background: "#10b981",
+              background: "#0775ff",
               border: "none",
               borderRadius: "8px",
               color: "#000000",
@@ -144,15 +144,15 @@ export function PaymentConfirmationModal({
               fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.2s ease",
-              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+              boxShadow: "0 4px 12px rgba(7, 117, 255, 0.3)",
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 6px 16px rgba(16, 185, 129, 0.4)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(7, 117, 255, 0.4)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(7, 117, 255, 0.3)";
             }}
           >
             Confirm Payment

@@ -16,15 +16,15 @@
     --text-secondary: #a1a1a1;
     --text-tertiary: #707070;
     --border-color: #262626;
-    --accent-color: #10b981;
-    --accent-hover: #059669;
-    --accent-light: rgba(16, 185, 129, 0.1);
-    --accent-glow: rgba(16, 185, 129, 0.15);
+    --accent-color: #0775ff;
+    --accent-hover: #055fd2;
+    --accent-light: rgba(7, 117, 255, 0.1);
+    --accent-glow: rgba(7, 117, 255, 0.15);
     --user-msg-bg: #1a1a1a;
     --assistant-msg-bg: transparent;
     --error-color: #ef4444;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    --shadow-green: 0 4px 16px rgba(16, 185, 129, 0.15);
+    --shadow-green: 0 4px 16px rgba(7, 117, 255, 0.15);
     --sidebar-width: 260px;
     --card-bg: rgba(20, 20, 20, 0.8);
     --card-hover: rgba(26, 26, 26, 0.95);
@@ -127,19 +127,9 @@ body {
 .logo-icon {
     width: 28px;
     height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent-color);
-    border-radius: 8px;
-    color: #000000;
+    background: #0775ff;
+    border-radius: 50%;
     flex-shrink: 0;
-    box-shadow: 0 0 12px var(--accent-glow);
-}
-
-.logo-icon svg {
-    width: 18px;
-    height: 18px;
 }
 
 .logo-text {
@@ -147,13 +137,6 @@ body {
     align-items: baseline;
     gap: 0;
     line-height: 1;
-}
-
-.logo-bio {
-    font-size: 19px;
-    font-weight: 700;
-    color: var(--accent-color);
-    letter-spacing: -0.02em;
 }
 
 .logo-agents {
@@ -509,34 +492,34 @@ body {
 
 @keyframes messageHighlight {
     0% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-        background: rgba(16, 185, 129, 0.08);
+        box-shadow: 0 0 0 0 rgba(7, 117, 255, 0.5);
+        background: rgba(7, 117, 255, 0.08);
     }
     30% {
-        box-shadow: 0 0 25px 6px rgba(16, 185, 129, 0.25);
-        background: rgba(16, 185, 129, 0.08);
+        box-shadow: 0 0 25px 6px rgba(7, 117, 255, 0.25);
+        background: rgba(7, 117, 255, 0.08);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        box-shadow: 0 0 0 0 rgba(7, 117, 255, 0);
         background: transparent;
     }
 }
 
 /* Extra attention for highlighted user messages */
 .message.user.message-highlight .message-content {
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 15px rgba(7, 117, 255, 0.3);
+    border: 1px solid rgba(7, 117, 255, 0.3);
     animation: userMessageGlow 1.5s ease-out;
 }
 
 @keyframes userMessageGlow {
     0% {
         transform: scale(1);
-        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 15px rgba(7, 117, 255, 0.4);
     }
     20% {
         transform: scale(1.02);
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 20px rgba(7, 117, 255, 0.3);
     }
     100% {
         transform: scale(1);
@@ -858,28 +841,6 @@ body {
     margin-bottom: 56px;
 }
 
-.welcome-logo-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--accent-color);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #000000;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 24px var(--accent-glow);
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 8px 24px var(--accent-glow);
-    }
-    50% {
-        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.25);
-    }
-}
 
 .welcome-title {
     font-size: 48px;
@@ -1037,19 +998,6 @@ body {
     margin-bottom: 40px;
 }
 
-.login-logo-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--accent-color);
-    border-radius: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #000000;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 24px var(--accent-glow);
-    animation: pulse 2s ease-in-out infinite;
-}
 
 .login-title {
     font-size: 36px;
@@ -1714,9 +1662,9 @@ textarea::placeholder {
 }
 
 .thinking-steps-badge.complete {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: rgba(7, 117, 255, 0.1);
+    color: #0775ff;
+    border: 1px solid rgba(7, 117, 255, 0.2);
 }
 
 .thinking-steps-time {
@@ -1778,8 +1726,8 @@ textarea::placeholder {
 }
 
 .thinking-step.complete {
-    background: rgba(16, 185, 129, 0.04);
-    border-color: rgba(16, 185, 129, 0.15);
+    background: rgba(7, 117, 255, 0.04);
+    border-color: rgba(7, 117, 255, 0.15);
 }
 
 .thinking-step-header {
@@ -1995,7 +1943,7 @@ textarea::placeholder {
 }
 
 .thinking-step-inline.complete .thinking-step-icon-inline {
-    color: #10b981;
+    color: #0775ff;
 }
 
 .thinking-step-inline.in-progress .thinking-step-icon-inline {

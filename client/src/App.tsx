@@ -538,7 +538,7 @@ export function App() {
                   type="button"
                   onClick={() => setIsWalletModalOpen(true)}
                   style={{
-                    background: "#10b981",
+                    background: "#0775ff",
                     border: "none",
                     color: "#000000",
                     padding: "10px 20px",
@@ -547,7 +547,7 @@ export function App() {
                     fontSize: "14px",
                     fontWeight: 600,
                     transition: "all 0.2s ease",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                    boxShadow: "0 4px 12px rgba(7, 117, 255, 0.3)",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
@@ -555,11 +555,11 @@ export function App() {
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(16, 185, 129, 0.4)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(7, 117, 255, 0.4)";
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(7, 117, 255, 0.3)";
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

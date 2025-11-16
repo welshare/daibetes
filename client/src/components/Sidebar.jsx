@@ -1,7 +1,15 @@
-import { useState } from 'preact/hooks';
-import { Button, IconButton } from './ui';
+import { useState } from "preact/hooks";
+import { Button, IconButton } from "./ui";
 
-export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSession, onDeleteSession, isMobileOpen, onMobileClose }) {
+export function Sidebar({
+  sessions,
+  currentSessionId,
+  onSessionSelect,
+  onNewSession,
+  onDeleteSession,
+  isMobileOpen,
+  onMobileClose,
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Group sessions by time period
@@ -35,22 +43,17 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
   const { today, yesterday, older } = groupSessions();
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'open' : ''}`}>
+    <div
+      className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobileOpen ? "open" : ""}`}
+    >
       <div className="sidebar-header">
         {!isCollapsed && (
           <>
             <div className="sidebar-branding">
               <div className="sidebar-logo">
-                <div className="logo-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C12 2 8 4 8 8C8 10 9 11 10 12C9 13 8 14 8 16C8 20 12 22 12 22C12 22 16 20 16 16C16 14 15 13 14 12C15 11 16 10 16 8C16 4 12 2 12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="8" r="1.5" fill="currentColor"/>
-                    <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
-                  </svg>
-                </div>
+                <div className="logo-icon"></div>
                 <div className="logo-text">
-                  <span className="logo-bio">BIO</span>
-                  <span className="logo-agents">AGENTS</span>
+                  <span className="logo-agents">dAIbetes</span>
                 </div>
               </div>
               <div className="sidebar-header-actions">
@@ -98,7 +101,7 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
             title="Expand sidebar"
             variant="ghost"
             className="toggle-sidebar-btn"
-            style={{ margin: '0 auto' }}
+            style={{ margin: "0 auto" }}
           />
         )}
       </div>
@@ -112,11 +115,13 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
                 {today.map((session) => (
                   <div
                     key={session.id}
-                    className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
+                    className={`session-item ${session.id === currentSessionId ? "active" : ""}`}
                     onClick={() => onSessionSelect(session.id)}
                   >
                     <div className="session-info">
-                      <span className="session-title">{session.title || 'New conversation'}</span>
+                      <span className="session-title">
+                        {session.title || "New conversation"}
+                      </span>
                     </div>
                     <IconButton
                       icon="close"
@@ -140,11 +145,13 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
                 {yesterday.map((session) => (
                   <div
                     key={session.id}
-                    className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
+                    className={`session-item ${session.id === currentSessionId ? "active" : ""}`}
                     onClick={() => onSessionSelect(session.id)}
                   >
                     <div className="session-info">
-                      <span className="session-title">{session.title || 'New conversation'}</span>
+                      <span className="session-title">
+                        {session.title || "New conversation"}
+                      </span>
                     </div>
                     <IconButton
                       icon="close"
@@ -168,11 +175,13 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
                 {older.map((session) => (
                   <div
                     key={session.id}
-                    className={`session-item ${session.id === currentSessionId ? 'active' : ''}`}
+                    className={`session-item ${session.id === currentSessionId ? "active" : ""}`}
                     onClick={() => onSessionSelect(session.id)}
                   >
                     <div className="session-info">
-                      <span className="session-title">{session.title || 'New conversation'}</span>
+                      <span className="session-title">
+                        {session.title || "New conversation"}
+                      </span>
                     </div>
                     <IconButton
                       icon="close"
@@ -197,14 +206,14 @@ export function Sidebar({ sessions, currentSessionId, onSessionSelect, onNewSess
               icon="logout"
               onClick={async () => {
                 try {
-                  await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    credentials: 'include'
+                  await fetch("/api/auth/logout", {
+                    method: "POST",
+                    credentials: "include",
                   });
                   // Reload to show login screen
                   window.location.reload();
                 } catch (error) {
-                  console.error('Logout failed:', error);
+                  console.error("Logout failed:", error);
                 }
               }}
               className="sidebar-logout-btn"

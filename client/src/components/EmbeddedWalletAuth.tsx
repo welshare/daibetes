@@ -99,10 +99,10 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
     return (
       <div
         style={{
-          background: "rgba(16, 185, 129, 0.08)",
+          background: "rgba(7, 117, 255, 0.08)",
           borderRadius: "12px",
           padding: "12px 16px",
-          border: "1px solid rgba(16, 185, 129, 0.2)",
+          border: "1px solid rgba(7, 117, 255, 0.2)",
           animation: "slideIn 0.3s ease-out",
         }}
       >
@@ -114,8 +114,8 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                background: "#10b981",
-                boxShadow: "0 0 8px rgba(16, 185, 129, 0.8)",
+                background: "#0775ff",
+                boxShadow: "0 0 8px rgba(7, 117, 255, 0.8)",
                 animation: "pulse 2s ease-in-out infinite",
                 flexShrink: 0,
               }}
@@ -128,12 +128,12 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 {usdcBalance && (
                   <span style={{
                     fontSize: "12px",
-                    color: "#10b981",
+                    color: "#0775ff",
                     fontWeight: 700,
                     padding: "2px 8px",
-                    background: "rgba(16, 185, 129, 0.1)",
+                    background: "rgba(7, 117, 255, 0.1)",
                     borderRadius: "4px",
-                    border: "1px solid rgba(16, 185, 129, 0.2)"
+                    border: "1px solid rgba(7, 117, 255, 0.2)"
                   }}>
                     ${usdcBalance} USDC
                   </span>
@@ -151,9 +151,9 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               type="button"
               onClick={handleCopyAddress}
               style={{
-                background: copied ? "rgba(16, 185, 129, 0.2)" : "rgba(16, 185, 129, 0.1)",
-                border: "1px solid rgba(16, 185, 129, 0.2)",
-                color: "#10b981",
+                background: copied ? "rgba(7, 117, 255, 0.2)" : "rgba(7, 117, 255, 0.1)",
+                border: "1px solid rgba(7, 117, 255, 0.2)",
+                color: "#0775ff",
                 padding: "6px 12px",
                 borderRadius: "6px",
                 cursor: "pointer",
@@ -166,12 +166,12 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               }}
               onMouseOver={(e) => {
                 if (!copied) {
-                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.15)";
+                  e.currentTarget.style.background = "rgba(7, 117, 255, 0.15)";
                 }
               }}
               onMouseOut={(e) => {
                 if (!copied) {
-                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.1)";
+                  e.currentTarget.style.background = "rgba(7, 117, 255, 0.1)";
                 }
               }}
             >
@@ -262,15 +262,15 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               width: "56px",
               height: "56px",
               borderRadius: "50%",
-              background: "rgba(16, 185, 129, 0.1)",
-              border: "1px solid rgba(16, 185, 129, 0.2)",
+              background: "rgba(7, 117, 255, 0.1)",
+              border: "1px solid rgba(7, 117, 255, 0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 16px",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0775ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
               <polyline points="22,6 12,13 2,6"></polyline>
             </svg>
@@ -281,7 +281,7 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
           <p style={{ margin: "0 0 4px 0", fontSize: "14px", color: "#a1a1a1", lineHeight: "1.5" }}>
             We sent a 6-digit verification code to
           </p>
-          <p style={{ margin: 0, fontSize: "14px", color: "#10b981", fontWeight: 600 }}>
+          <p style={{ margin: 0, fontSize: "14px", color: "#0775ff", fontWeight: 600 }}>
             {email}
           </p>
         </div>
@@ -303,7 +303,7 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 width: "100%",
                 padding: "16px",
                 borderRadius: "12px",
-                border: otp.length === 6 ? "2px solid #10b981" : "2px solid #262626",
+                border: otp.length === 6 ? "2px solid #0775ff" : "2px solid #262626",
                 fontSize: "20px",
                 fontWeight: 700,
                 fontFamily: "monospace",
@@ -313,10 +313,10 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 color: "#ffffff",
                 outline: "none",
                 transition: "all 0.2s ease",
-                boxShadow: otp.length === 6 ? "0 0 0 4px rgba(16, 185, 129, 0.1)" : "none",
+                boxShadow: otp.length === 6 ? "0 0 0 4px rgba(7, 117, 255, 0.1)" : "none",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = "#10b981";
+                e.currentTarget.style.borderColor = "#0775ff";
               }}
               onBlur={(e) => {
                 if (otp.length !== 6) {
@@ -394,7 +394,7 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 border: "none",
                 background: isVerifying || !otp || otp.length !== 6
                   ? "#262626"
-                  : "#10b981",
+                  : "#0775ff",
                 color: isVerifying || !otp || otp.length !== 6 ? "#707070" : "#000000",
                 cursor: isVerifying || !otp || otp.length !== 6 ? "not-allowed" : "pointer",
                 fontSize: "14px",
@@ -402,7 +402,7 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
                 transition: "all 0.2s ease",
                 boxShadow: isVerifying || !otp || otp.length !== 6
                   ? "none"
-                  : "0 4px 16px rgba(16, 185, 129, 0.3)",
+                  : "0 4px 16px rgba(7, 117, 255, 0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -411,13 +411,13 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               onMouseOver={(e) => {
                 if (!isVerifying && otp && otp.length === 6) {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.4)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(7, 117, 255, 0.4)";
                 }
               }}
               onMouseOut={(e) => {
                 if (!isVerifying && otp && otp.length === 6) {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(16, 185, 129, 0.3)";
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(7, 117, 255, 0.3)";
                 }
               }}
             >
@@ -476,15 +476,15 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
             width: "64px",
             height: "64px",
             borderRadius: "16px",
-            background: "rgba(16, 185, 129, 0.1)",
-            border: "1px solid rgba(16, 185, 129, 0.2)",
+            background: "rgba(7, 117, 255, 0.1)",
+            border: "1px solid rgba(7, 117, 255, 0.2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             margin: "0 auto 20px",
           }}
         >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0775ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
@@ -525,8 +525,8 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               transition: "all 0.2s ease",
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "#10b981";
-              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(16, 185, 129, 0.1)";
+              e.currentTarget.style.borderColor = "#0775ff";
+              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(7, 117, 255, 0.1)";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = "#262626";
@@ -568,13 +568,13 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
             padding: "14px 20px",
             borderRadius: "10px",
             border: "none",
-            background: isSigningIn || !email ? "#262626" : "#10b981",
+            background: isSigningIn || !email ? "#262626" : "#0775ff",
             color: isSigningIn || !email ? "#707070" : "#000000",
             cursor: isSigningIn || !email ? "not-allowed" : "pointer",
             fontSize: "15px",
             fontWeight: 700,
             transition: "all 0.2s ease",
-            boxShadow: isSigningIn || !email ? "none" : "0 4px 16px rgba(16, 185, 129, 0.3)",
+            boxShadow: isSigningIn || !email ? "none" : "0 4px 16px rgba(7, 117, 255, 0.3)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -583,13 +583,13 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
           onMouseOver={(e) => {
             if (!isSigningIn && email) {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.4)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(7, 117, 255, 0.4)";
             }
           }}
           onMouseOut={(e) => {
             if (!isSigningIn && email) {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 16px rgba(16, 185, 129, 0.3)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(7, 117, 255, 0.3)";
             }
           }}
         >
@@ -615,15 +615,15 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
         </button>
       </form>
 
-      <div style={{ marginTop: "24px", padding: "16px", background: "rgba(16, 185, 129, 0.05)", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.1)" }}>
+      <div style={{ marginTop: "24px", padding: "16px", background: "rgba(7, 117, 255, 0.05)", borderRadius: "12px", border: "1px solid rgba(7, 117, 255, 0.1)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
           <div
             style={{
               width: "20px",
               height: "20px",
               borderRadius: "50%",
-              background: "rgba(16, 185, 129, 0.1)",
-              border: "1px solid rgba(16, 185, 129, 0.2)",
+              background: "rgba(7, 117, 255, 0.1)",
+              border: "1px solid rgba(7, 117, 255, 0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -631,7 +631,7 @@ export function EmbeddedWalletAuth({ onWalletConnected, usdcBalance }: EmbeddedW
               marginTop: "2px",
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0775ff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
           </div>

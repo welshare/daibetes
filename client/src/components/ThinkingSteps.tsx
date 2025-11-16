@@ -267,12 +267,12 @@ export function ThinkingSteps({ state }: ThinkingStepsProps) {
                               cx="8"
                               cy="8"
                               r="7"
-                              fill="#10b981"
+                              fill="#0775ff"
                               opacity="0.2"
                             />
                             <path
                               d="M5 8l2 2 4-4"
-                              stroke="#10b981"
+                              stroke="#0775ff"
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
