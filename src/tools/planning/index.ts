@@ -101,18 +101,69 @@ export const planningTool: Tool = {
       maxTokens: 1024,
     };
 
+    logger.info(`🔵 Planning: Starting LLM request`, {
+      provider: PLANNING_LLM_PROVIDER,
+      model: planningModel,
+      messageCount: messages.length,
+      maxTokens: llmRequest.maxTokens,
+      promptLength: prompt.length,
+      userMessageLength: message.question?.length || 0,
+    });
+
     for (let i = 0; i < MAX_RETRIES; i++) {
+      const attemptNumber = i + 1;
+      logger.info(`🔄 Planning: Attempt ${attemptNumber}/${MAX_RETRIES}`);
+      
       try {
+        logger.info(`📤 Planning: Sending request to ${PLANNING_LLM_PROVIDER}...`, {
+          request: {
+            model: llmRequest.model,
+            messageCount: llmRequest.messages.length,
+            maxTokens: llmRequest.maxTokens,
+            firstMessagePreview: llmRequest.messages[0]?.content?.substring(0, 200) || "",
+          },
+        });
+
         const completion =
           await planningLlmProvider.createChatCompletion(llmRequest);
+        
+        logger.info(`📥 Planning: Received response from ${PLANNING_LLM_PROVIDER}`, {
+          hasContent: !!completion.content,
+          contentLength: completion.content?.length || 0,
+          usage: completion.usage,
+        });
+
         const xmlResponseText = completion.content;
 
-        logger.info(`Planning LLM response: ${xmlResponseText}`);
+        if (!xmlResponseText || xmlResponseText.trim().length === 0) {
+          logger.error(`❌ Planning: Empty response received from ${PLANNING_LLM_PROVIDER}`, {
+            attempt: attemptNumber,
+            completion: JSON.stringify(completion, null, 2),
+          });
+          throw new Error(`Empty response from ${PLANNING_LLM_PROVIDER}`);
+        }
 
+        logger.info(`📄 Planning: LLM response content (${xmlResponseText.length} chars):`, {
+          preview: xmlResponseText.substring(0, 500),
+          fullContent: xmlResponseText,
+        });
+
+        logger.info(`🔍 Planning: Attempting to parse XML response...`);
         const parsedXmlResponse = parseKeyValueXml(xmlResponseText);
+        
         if (!parsedXmlResponse) {
+          logger.error(`❌ Planning: Failed to parse XML response`, {
+            attempt: attemptNumber,
+            rawResponse: xmlResponseText,
+            responseLength: xmlResponseText.length,
+          });
           throw new Error("Failed to parse XML response");
         }
+
+        logger.info(`✅ Planning: Successfully parsed XML response`, {
+          attempt: attemptNumber,
+          parsedKeys: Object.keys(parsedXmlResponse),
+        });
 
         const providersRaw = parsedXmlResponse.providers;
         const providerList = Array.isArray(providersRaw)
@@ -143,6 +194,12 @@ export const planningTool: Tool = {
         const planningCost = calculateRequestPrice(["PLANNING"]);
         state.values.estimatedCostsUSD["PLANNING"] = parseFloat(planningCost);
 
+        logger.info(`✅ Planning: Successfully completed on attempt ${attemptNumber}`, {
+          providers: providerList,
+          actions: actionList,
+          estimatedCost: planningCost,
+        });
+
         endStep(state, "PLANNING");
 
         // Update state in DB after endStep
@@ -160,14 +217,28 @@ export const planningTool: Tool = {
           actions: actionList,
         };
       } catch (error) {
-        console.error(
-          `Failed to create chat completion with ${PLANNING_LLM_PROVIDER}, retrying...`,
-          error,
-        );
+        const errorDetails = {
+          attempt: attemptNumber,
+          provider: PLANNING_LLM_PROVIDER,
+          model: planningModel,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+          fullError: error,
+        };
+
+        logger.error(`❌ Planning: Failed on attempt ${attemptNumber}/${MAX_RETRIES}`, errorDetails);
+
+        if (attemptNumber < MAX_RETRIES) {
+          logger.info(`⏳ Planning: Retrying in next attempt...`);
+        } else {
+          logger.error(`💥 Planning: All ${MAX_RETRIES} attempts failed. Giving up.`);
+        }
       }
     }
 
     // planning LLM failed, return empty arrays
+    logger.error(`🚫 Planning: All retries exhausted. Returning empty providers and actions.`);
     endStep(state, "PLANNING");
 
     // Update state in DB after endStep

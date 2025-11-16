@@ -183,7 +183,7 @@ export async function generateFinalResponse(
   onStreamChunk?: (chunk: string, fullText: string) => Promise<void>,
 ) {
   const FINAL_LLM_PROVIDER: LLMProvider =
-    (process.env.REPLY_LLM_PROVIDER as LLMProvider) || "google";
+    (process.env.REPLY_LLM_PROVIDER as LLMProvider) || "openai";
   const llmApiKey = process.env[`${FINAL_LLM_PROVIDER.toUpperCase()}_API_KEY`];
 
   if (!llmApiKey) {
@@ -198,7 +198,7 @@ export async function generateFinalResponse(
   });
 
   const llmRequest = {
-    model: process.env.REPLY_LLM_MODEL || "gemini-2.5-pro",
+    model: process.env.REPLY_LLM_MODEL || "gpt-4o-mini",
     systemInstruction: character.system,
     messages: [
       {

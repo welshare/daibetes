@@ -97,32 +97,55 @@ export class VectorSearchWithReranker {
   ): Promise<Document[]> {
     if (documents.length === 0) return [];
 
+    // Check if Cohere API key is available
+    if (!CONFIG.COHERE_API_KEY) {
+      logger.warn(
+        `⚠️ Cohere API key not configured, skipping reranking. Returning top ${topN} vector results.`,
+      );
+      return documents.slice(0, topN);
+    }
+
     logger.info(
       `🎯 Reranking ${documents.length} documents, returning top ${topN}`,
     );
 
-    const response = await cohere.rerank({
-      model: "rerank-english-v3.0",
-      query: query,
-      documents: documents.map((doc) => ({
-        text: `${doc.title}\n${doc.content}`,
-      })),
-      topN: Math.min(topN, documents.length),
-      returnDocuments: true,
-    });
+    try {
+      const response = await cohere.rerank({
+        model: "rerank-english-v3.0",
+        query: query,
+        documents: documents.map((doc) => ({
+          text: `${doc.title}\n${doc.content}`,
+        })),
+        topN: Math.min(topN, documents.length),
+        returnDocuments: true,
+      });
 
-    const rerankedResults = response.results
-      .map((result) => ({
-        ...documents[result.index],
-        relevanceScore: result.relevanceScore,
-      }))
-      .filter((doc) => doc.relevanceScore >= CONFIG.RERANKER_SCORE_THRESHOLD);
+      const rerankedResults = response.results
+        .map((result) => ({
+          ...documents[result.index],
+          relevanceScore: result.relevanceScore,
+        }))
+        .filter((doc) => doc.relevanceScore >= CONFIG.RERANKER_SCORE_THRESHOLD);
 
-    logger.info(
-      `✨ Reranking complete, top score: ${rerankedResults[0]?.relevanceScore?.toFixed(3)}, filtered to ${rerankedResults.length} results (threshold: ${CONFIG.RERANKER_SCORE_THRESHOLD})`,
-    );
+      logger.info(
+        `✨ Reranking complete, top score: ${rerankedResults[0]?.relevanceScore?.toFixed(3)}, filtered to ${rerankedResults.length} results (threshold: ${CONFIG.RERANKER_SCORE_THRESHOLD})`,
+      );
 
-    return rerankedResults as Document[];
+      return rerankedResults as Document[];
+    } catch (error) {
+      logger.error(
+        `❌ Reranking failed, falling back to vector search results:`,
+        {
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+      );
+      // Fallback to top N vector results if reranking fails
+      logger.info(
+        `⚡ Returning top ${topN} vector results due to reranking failure`,
+      );
+      return documents.slice(0, topN);
+    }
   }
 
   // Complete search pipeline
@@ -157,14 +180,23 @@ export class VectorSearchWithReranker {
 
     let finalResults: Document[];
 
-    if (useReranking && vectorResults.length > 1) {
+    // Only use reranking if enabled AND Cohere API key is available
+    const canRerank = useReranking && CONFIG.COHERE_API_KEY && vectorResults.length > 1;
+
+    if (canRerank) {
       // Stage 2: Rerank with Cohere
       finalResults = await this.rerank(query, vectorResults, finalLimit);
     } else {
       finalResults = vectorResults.slice(0, finalLimit);
-      logger.info(
-        `⚡ Skipping reranking, returning top ${finalResults.length} vector results`,
-      );
+      if (!CONFIG.COHERE_API_KEY && useReranking) {
+        logger.info(
+          `⚡ Reranking disabled (no Cohere API key), returning top ${finalResults.length} vector results`,
+        );
+      } else {
+        logger.info(
+          `⚡ Skipping reranking, returning top ${finalResults.length} vector results`,
+        );
+      }
     }
 
     const totalTime = Date.now() - startTime;
@@ -186,30 +218,68 @@ export class VectorSearchWithReranker {
   ): Promise<Document[]> {
     logger.info(`📚 Adding ${documents.length} documents in batch`);
 
-    const documentsWithEmbeddings = await Promise.all(
-      documents.map(async (doc, index) => {
-        logger.info(
-          `🔄 Processing document ${index + 1}/${documents.length}: ${doc.title}`,
-        );
-        const embedding = await this.embeddingProvider.generateEmbedding(
-          `${doc.title}\n${doc.content}`,
-        );
-        return {
-          ...doc,
-          embedding,
-        };
-      }),
-    );
+    try {
+      const documentsWithEmbeddings = await Promise.all(
+        documents.map(async (doc, index) => {
+          logger.info(
+            `🔄 Processing document ${index + 1}/${documents.length}: ${doc.title}`,
+          );
+          try {
+            const embedding = await this.embeddingProvider.generateEmbedding(
+              `${doc.title}\n${doc.content}`,
+            );
+            logger.info(`   ✓ Generated embedding for "${doc.title}" (dimension: ${embedding.length})`);
+            return {
+              ...doc,
+              embedding,
+            };
+          } catch (embeddingError) {
+            logger.error(`   ✗ Failed to generate embedding for "${doc.title}":`, embeddingError);
+            throw embeddingError;
+          }
+        }),
+      );
 
-    const { data, error } = await supabase
-      .from("documents")
-      .insert(documentsWithEmbeddings)
-      .select();
+      logger.info(`📤 Inserting ${documentsWithEmbeddings.length} documents with embeddings into database...`);
 
-    if (error) throw error;
+      // Use ON CONFLICT DO NOTHING to handle duplicates gracefully (PostgreSQL feature)
+      // This prevents errors when documents already exist
+      const { data, error } = await supabase
+        .from("documents")
+        .insert(documentsWithEmbeddings)
+        .select();
 
-    logger.info(`✅ Successfully added ${data.length} documents`);
-    return data;
+      if (error) {
+        // Check if it's a duplicate/constraint error - these are acceptable
+        const isDuplicateError = 
+          error.message.includes("duplicate") || 
+          error.message.includes("unique") ||
+          error.code === "23505"; // PostgreSQL unique violation code
+        
+        if (isDuplicateError) {
+          logger.warn(`⚠️ Some documents in batch already exist (duplicates), continuing...`, {
+            message: error.message,
+            code: error.code,
+          });
+          // Return empty array - duplicates are fine, we'll continue
+          return [];
+        }
+        
+        logger.error(`❌ Database insert failed:`, {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        throw error;
+      }
+
+      logger.info(`✅ Successfully added ${data.length} documents`);
+      return data;
+    } catch (error) {
+      logger.error(`❌ addDocuments failed:`, error);
+      throw error;
+    }
   }
 
   // Get document stats

@@ -145,25 +145,53 @@ export async function getStandaloneMessage(
   thread: any[],
   latestMessage: string,
 ): Promise<string> {
+  logger.info(`🔵 getStandaloneMessage: Starting`, {
+    threadLength: thread.length,
+    latestMessageLength: latestMessage.length,
+    latestMessagePreview: latestMessage.substring(0, 100),
+  });
+
   // If thread is empty or only has 1 message, return the message as-is
   if (thread.length <= 1) {
+    logger.info(`🔵 getStandaloneMessage: Thread too short, returning original message`);
     return latestMessage;
   }
 
   // Format conversation history (exclude the last message as it's passed separately)
   const conversationHistory = formatConversationHistory(thread.slice(0, -1));
 
+  logger.info(`🔵 getStandaloneMessage: Formatted conversation history`, {
+    historyLength: conversationHistory.length,
+    historyPreview: conversationHistory.substring(0, 200),
+  });
+
   const prompt = character.templates.standaloneMessageTemplate
     .replace("{conversationHistory}", conversationHistory)
     .replace("{latestMessage}", latestMessage);
 
+  logger.info(`🔵 getStandaloneMessage: Created prompt`, {
+    promptLength: prompt.length,
+    promptPreview: prompt.substring(0, 300),
+  });
+
+  const llmProviderName = (process.env.STRUCTURED_LLM_PROVIDER as any) || "openai";
+  const llmApiKey = process.env[`${llmProviderName.toUpperCase()}_API_KEY`];
+  
+  if (!llmApiKey) {
+    logger.error(`❌ getStandaloneMessage: API key missing`, {
+      provider: llmProviderName,
+      envVar: `${llmProviderName.toUpperCase()}_API_KEY`,
+    });
+    throw new Error(`${llmProviderName.toUpperCase()}_API_KEY is not configured.`);
+  }
+
   const llmProvider = new LLM({
-    name: "google",
-    apiKey: process.env.GOOGLE_API_KEY!,
+    name: llmProviderName,
+    apiKey: llmApiKey,
   });
 
   const llmRequest = {
-    model: "gemini-2.5-pro",
+    model: process.env.STRUCTURED_LLM_MODEL || "gpt-4o-mini",
     messages: [
       {
         role: "user" as const,
@@ -173,9 +201,48 @@ export async function getStandaloneMessage(
     maxTokens: 150,
   };
 
-  const llmResponse = await llmProvider.createChatCompletion(llmRequest);
+  logger.info(`🔵 getStandaloneMessage: Sending LLM request`, {
+    provider: llmProviderName,
+    model: llmRequest.model,
+    maxTokens: llmRequest.maxTokens,
+  });
 
-  return llmResponse.content.trim();
+  try {
+    const llmResponse = await llmProvider.createChatCompletion(llmRequest);
+
+    logger.info(`🔵 getStandaloneMessage: Received LLM response`, {
+      hasContent: !!llmResponse.content,
+      contentLength: llmResponse.content?.length || 0,
+      contentPreview: llmResponse.content?.substring(0, 200) || "",
+      usage: llmResponse.usage,
+    });
+
+    if (!llmResponse.content || llmResponse.content.trim().length === 0) {
+      logger.error(`❌ getStandaloneMessage: Empty response received`, {
+        fullResponse: JSON.stringify(llmResponse, null, 2),
+      });
+      // Fallback to original message if LLM returns empty
+      logger.warn(`⚠️ getStandaloneMessage: Falling back to original message`);
+      return latestMessage;
+    }
+
+    const trimmedContent = llmResponse.content.trim();
+    logger.info(`✅ getStandaloneMessage: Returning standalone message`, {
+      resultLength: trimmedContent.length,
+      result: trimmedContent,
+    });
+
+    return trimmedContent;
+  } catch (error) {
+    logger.error(`❌ getStandaloneMessage: LLM request failed`, {
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
+    // Fallback to original message on error
+    logger.warn(`⚠️ getStandaloneMessage: Falling back to original message due to error`);
+    return latestMessage;
+  }
 }
 
 export function parseKeyValueXml(text: string): Record<string, any> | null {

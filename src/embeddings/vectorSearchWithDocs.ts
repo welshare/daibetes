@@ -97,19 +97,42 @@ export class VectorSearchWithDocuments extends VectorSearchWithReranker {
       `📦 Total: ${allChunks.length} chunks from ${addedCount} documents (expected at least ${newDocuments.length} chunks)`,
     );
 
-    // Add chunks in batches of 100 for optimal performance
-    const BATCH_SIZE = 100;
+    // Add chunks in smaller batches to avoid timeouts (reduced from 100 to 25)
+    const BATCH_SIZE = 25;
+    let successfulBatches = 0;
+    let failedBatches = 0;
+    
     for (let i = 0; i < allChunks.length; i += BATCH_SIZE) {
       const batch = allChunks.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(allChunks.length / BATCH_SIZE);
+      
       logger.info(
-        `   - Adding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(allChunks.length / BATCH_SIZE)} (${batch.length} chunks)`,
+        `   - Adding batch ${batchNumber}/${totalBatches} (${batch.length} chunks)`,
       );
       try {
         await this.addDocuments(batch);
+        successfulBatches++;
+        logger.info(`   ✅ Batch ${batchNumber} completed successfully`);
       } catch (e) {
-        logger.error(`  - Failed to add batch starting at index ${i}:`, e as any);
+        failedBatches++;
+        const error = e as Error;
+        logger.error(`  ❌ Failed to add batch ${batchNumber} starting at index ${i}`);
+        logger.error(`  - Error type: ${error.constructor.name}`);
+        logger.error(`  - Error message: ${error.message}`);
+        
+        // If it's a timeout or constraint error, log but continue
+        if (error.message.includes("timeout") || error.message.includes("duplicate") || error.message.includes("unique")) {
+          logger.warn(`  ⚠️ Batch ${batchNumber} failed (likely duplicates or timeout), continuing with next batch...`);
+        } else {
+          if (error.stack) {
+            logger.error(`  - Error stack: ${error.stack}`);
+          }
+        }
       }
     }
+    
+    logger.info(`📊 Batch processing summary: ${successfulBatches} successful, ${failedBatches} failed out of ${Math.ceil(allChunks.length / BATCH_SIZE)} total batches`);
 
     skippedCount = localDocs.length - addedCount;
 

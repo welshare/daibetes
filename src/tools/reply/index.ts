@@ -168,6 +168,20 @@ export const replyTool = {
 
     prompt = composePromptFromState(state, template);
 
+    // Insert providerString (knowledge base chunks, papers, etc.) at the beginning of the prompt
+    // This ensures the knowledge base is visible to the LLM
+    if (providerString.trim().length > 0) {
+      // Find where to insert - right after the task description or at the beginning
+      const taskMatch = prompt.match(/# Task:.*?\n/);
+      if (taskMatch) {
+        const insertPosition = taskMatch.index! + taskMatch[0].length;
+        prompt = prompt.slice(0, insertPosition) + "\n" + providerString + "\n" + prompt.slice(insertPosition);
+      } else {
+        // If no task section found, prepend to the prompt
+        prompt = providerString + "\n\n" + prompt;
+      }
+    }
+
     // Include conversation history
     let conversationHistory: any[] = [];
     if (source === "ui") {
@@ -233,14 +247,7 @@ export const replyTool = {
       name: REPLY_LLM_PROVIDER,
       apiKey: llmApiKey,
     });
-    let googleLLMProvider: LLM;
-    // default to google in case of error
-    if (process.env.GOOGLE_API_KEY) {
-      googleLLMProvider = new LLM({
-        name: "google",
-        apiKey: process.env.GOOGLE_API_KEY,
-      });
-    }
+    // Google fallback removed - using OpenAI only
     let systemInstruction: string | undefined = undefined;
     if (character.system) {
       systemInstruction = character.system;
@@ -318,21 +325,16 @@ export const replyTool = {
           await llmProvider.createChatCompletionWebSearch(llmRequest);
       } catch (error) {
         logger.error(
-          `Failed to create chat completion web search with ${REPLY_LLM_PROVIDER}, defaulting to google:`,
-          error as any,
+          `❌ Failed to create chat completion web search with ${REPLY_LLM_PROVIDER}:`,
+          {
+            errorType: error instanceof Error ? error.constructor.name : typeof error,
+            errorMessage: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined,
+            provider: REPLY_LLM_PROVIDER,
+            model: llmRequest.model,
+          },
         );
-        const googleLLMRequest = {
-          model: "gemini-2.5-pro",
-          systemInstruction,
-          messages,
-          maxTokens: 768,
-          thinkingBudget: 4096,
-          tools: tools.length > 0 ? tools : undefined,
-        };
-        webResponse =
-          await googleLLMProvider!.createChatCompletionWebSearch(
-            googleLLMRequest,
-          );
+        throw error; // Re-throw instead of falling back to Google
       }
 
       evalText = webResponse.llmOutput;
@@ -357,20 +359,17 @@ export const replyTool = {
       try {
         completion = await llmProvider.createChatCompletion(llmRequest);
       } catch (error) {
-        console.error(
-          `Failed to create chat completion with ${REPLY_LLM_PROVIDER}, defaulting to google:`,
-          error,
+        logger.error(
+          `❌ Failed to create chat completion with ${REPLY_LLM_PROVIDER}:`,
+          {
+            errorType: error instanceof Error ? error.constructor.name : typeof error,
+            errorMessage: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined,
+            provider: REPLY_LLM_PROVIDER,
+            model: llmRequest.model,
+          },
         );
-        const googleLLMRequest = {
-          model: "gemini-2.5-pro",
-          systemInstruction,
-          messages,
-          maxTokens: 768,
-          thinkingBudget: 4096,
-          tools: tools.length > 0 ? tools : undefined,
-        };
-        completion =
-          await googleLLMProvider!.createChatCompletion(googleLLMRequest);
+        throw error; // Re-throw instead of falling back to Google
       }
 
       const rawContent = completion.content?.trim();
