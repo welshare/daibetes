@@ -1,15 +1,15 @@
 import character from "../../character";
+import { getMessagesByConversation } from "../../db/operations";
 import { LLM } from "../../llm/provider";
 import { type Message, type State, type Tool } from "../../types/core";
 import logger from "../../utils/logger";
 import {
   composePromptFromState,
+  endStep,
   formatConversationHistory,
   parseKeyValueXml,
   startStep,
-  endStep,
 } from "../../utils/state";
-import { getMessagesByConversation } from "../../db/operations";
 import { calculateRequestPrice } from "../../x402/pricing";
 
 export const planningTool: Tool = {
@@ -27,15 +27,21 @@ export const planningTool: Tool = {
     // Update state in DB after startStep
     if (state.id) {
       try {
-        console.log('[planning] Updating state after startStep, state.id:', state.id, 'steps:', state.values.steps);
+        logger.debug(
+          {
+            stateId: state.id,
+            steps: state.values.steps,
+          },
+          "[planning] Updating state after startStep",
+        );
         const { updateState } = await import("../../db/operations");
         await updateState(state.id, state.values);
-        console.log('[planning] State updated successfully');
+        logger.debug("[planning] State updated successfully");
       } catch (err) {
         console.error("Failed to update state in DB:", err);
       }
     } else {
-      console.warn('[planning] No state.id available, skipping state update');
+      logger.warn("[planning] No state.id available, skipping state update");
     }
 
     // TODO: idea - instead of providers/actions use a less structured approach, outline steps in 'levels'
@@ -98,7 +104,7 @@ export const planningTool: Tool = {
     const llmRequest = {
       model: planningModel,
       messages,
-      maxTokens: 1024,
+      maxTokens: 5000,
     };
 
     let lastError: Error | null = null;
@@ -108,32 +114,61 @@ export const planningTool: Tool = {
           await planningLlmProvider.createChatCompletion(llmRequest);
         const xmlResponseText = completion.content;
 
+        // Check if the response is empty or undefined
+        if (!xmlResponseText || xmlResponseText.trim().length === 0) {
+          logger.error(
+            {
+              completion,
+              provider: PLANNING_LLM_PROVIDER,
+              model: planningModel,
+              attempt: i + 1,
+            },
+            "Planning LLM returned empty response",
+          );
+          throw new Error(
+            `Planning LLM returned empty response (attempt ${i + 1}/${MAX_RETRIES}). ` +
+              `Provider: ${PLANNING_LLM_PROVIDER}, Model: ${planningModel}`,
+          );
+        }
+
         logger.info(`Planning LLM response: ${xmlResponseText}`);
 
         const parsedXmlResponse = parseKeyValueXml(xmlResponseText);
         if (!parsedXmlResponse) {
-          throw new Error("Failed to parse XML response from planning LLM");
+          logger.error(
+            {
+              xmlResponseText,
+              responseLength: xmlResponseText.length,
+              provider: PLANNING_LLM_PROVIDER,
+              model: planningModel,
+            },
+            "Failed to parse XML response from planning LLM",
+          );
+          throw new Error(
+            `Failed to parse XML response from planning LLM. ` +
+              `Response was: ${xmlResponseText.substring(0, 200)}${xmlResponseText.length > 200 ? "..." : ""}`,
+          );
         }
 
         const providersRaw = parsedXmlResponse.providers;
         const providerList = Array.isArray(providersRaw)
           ? providersRaw
           : typeof providersRaw === "string"
-          ? providersRaw
-              .split(",")
-              .map((p: string) => p.trim())
-              .filter(Boolean)
-          : [];
+            ? providersRaw
+                .split(",")
+                .map((p: string) => p.trim())
+                .filter(Boolean)
+            : [];
 
         const actionsRaw = parsedXmlResponse.actions;
         const actionList = Array.isArray(actionsRaw)
           ? actionsRaw
           : typeof actionsRaw === "string"
-          ? actionsRaw
-              .split(",")
-              .map((a: string) => a.trim())
-              .filter(Boolean)
-          : [];
+            ? actionsRaw
+                .split(",")
+                .map((a: string) => a.trim())
+                .filter(Boolean)
+            : [];
 
         // Initialize estimatedCostsUSD object if it doesn't exist
         if (!state.values.estimatedCostsUSD) {
@@ -172,7 +207,7 @@ export const planningTool: Tool = {
           },
           `Planning LLM call failed (attempt ${attemptNum}/${MAX_RETRIES})`,
         );
-        
+
         // If this is the last attempt, don't continue the loop
         if (i === MAX_RETRIES - 1) {
           break;

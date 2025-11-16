@@ -58,14 +58,18 @@ export const reflectionTool = {
       };
     } else {
       // we need a prompt to reflect on the previous conversation state and the new message state
-      const prompt = await getReflectionPrompt(state, conversationState, message);
+      const prompt = await getReflectionPrompt(
+        state,
+        conversationState,
+        message,
+      );
       // temporary console logs
       logger.info(`Prompt: ${prompt}`);
       const response = await new LLM({
-        name: "google",
-        apiKey: process.env.GOOGLE_API_KEY!,
+        name: "openai",
+        apiKey: process.env.OPENAI_API_KEY!,
       }).createChatCompletion({
-        model: "gemini-2.5-pro",
+        model: "gpt-5",
         messages: [{ role: "user", content: prompt }],
         maxTokens: 1024,
         thinkingBudget: 2048,
