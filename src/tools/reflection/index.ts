@@ -58,24 +58,36 @@ export const reflectionTool = {
       };
     } else {
       // we need a prompt to reflect on the previous conversation state and the new message state
-      const prompt = await getReflectionPrompt(
-        state,
-        conversationState,
-        message,
-      );
-      // temporary console logs
-      logger.info(`Prompt: ${prompt}`);
+      const prompt = await getReflectionPrompt(state, conversationState, message);
+      
+      const REFLECTION_LLM_PROVIDER = (process.env.STRUCTURED_LLM_PROVIDER as any) || "openai";
+      const reflectionApiKey = process.env[`${REFLECTION_LLM_PROVIDER.toUpperCase()}_API_KEY`];
+      
+      if (!reflectionApiKey) {
+        throw new Error(`${REFLECTION_LLM_PROVIDER.toUpperCase()}_API_KEY is not configured.`);
+      }
+
+      logger.info(`🔄 Reflection: Starting LLM request`, {
+        provider: REFLECTION_LLM_PROVIDER,
+        model: process.env.STRUCTURED_LLM_MODEL || "gpt-4o-mini",
+        promptLength: prompt.length,
+      });
+
       const response = await new LLM({
-        name: "openai",
-        apiKey: process.env.OPENAI_API_KEY!,
+        name: REFLECTION_LLM_PROVIDER,
+        apiKey: reflectionApiKey,
       }).createChatCompletion({
-        model: "gpt-5",
+        model: process.env.STRUCTURED_LLM_MODEL || "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         maxTokens: 1024,
-        thinkingBudget: 2048,
       });
-      // temporary console logs
-      logger.info(`Response content: ${response.content}`);
+      
+      logger.info(`✅ Reflection: Received response`, {
+        hasContent: !!response.content,
+        contentLength: response.content?.length || 0,
+        usage: response.usage,
+        preview: response.content?.substring(0, 200) || "",
+      });
 
       conversationState.values = {
         ...conversationState.values,

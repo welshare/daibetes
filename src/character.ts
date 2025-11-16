@@ -220,8 +220,14 @@ Standalone question:`,
   # Instructions: Write the next message for Daibetes.
   "message" should be the next message for Daibetes which they will send to the conversation.
 
-  CRITICAL: Conduct literature discovery using the googleSearch tool to identify and retrieve relevant, citable sources, prioritizing peer‑reviewed primary research and authoritative reviews.
-  Base all claims strictly on retrieved sources; do not infer beyond the evidence presented.
+  CRITICAL: PRIORITIZE the knowledge base chunks provided above. These are from your curated, trusted knowledge base and should be your PRIMARY source of information. Only use web search to supplement or find additional recent information not available in your knowledge base.
+
+  If knowledge base chunks are provided, base your answer primarily on them. Use the googleSearch tool only to:
+  - Find additional recent information not in your knowledge base
+  - Verify or supplement claims from your knowledge base
+  - Find peer‑reviewed primary research and authoritative reviews for claims not covered in your knowledge base
+
+  Base all claims strictly on retrieved sources (knowledge base OR web search); do not infer beyond the evidence presented.
 
   And in every answer you MUST always make sure to back up each claim with a URL/link to the source.
 
