@@ -1,6 +1,6 @@
 # dAIbetes Agent based on the BioAgent Framework
 
-An advanced medical researcher AI agent in the field of diabetes. 
+An AI agent that reinterprets everyday patient language into evidence-anchored insight. Bridges subjective experience with peer-reviewed researches from Europe PMC (public, open-access, non-commercial biomedical literature database).
 
 ## Setup
 
@@ -76,17 +76,18 @@ The UI includes integrated support for x402 micropayments using Coinbase embedde
 
 BioAgents AgentKit supports **USDC micropayments** for API access using the x402 payment protocol. The system implements a **three-tier access control model**:
 
-| Access Tier | Authentication | Payment Required |
-|------------|----------------|------------------|
-| **Next.js Frontend** | Privy JWT | ❌ FREE (bypasses x402) |
-| **Internal Dev UI** | CDP Wallet | ✅ Requires x402 |
-| **External Agents** | None | ✅ Requires x402 |
+| Access Tier          | Authentication | Payment Required        |
+| -------------------- | -------------- | ----------------------- |
+| **Next.js Frontend** | Privy JWT      | ❌ FREE (bypasses x402) |
+| **Internal Dev UI**  | CDP Wallet     | ✅ Requires x402        |
+| **External Agents**  | None           | ✅ Requires x402        |
 
 ### Quick Start
 
 #### Testnet Setup (Development)
 
 1. **Enable x402 on testnet**:
+
 ```bash
 X402_ENABLED=true
 X402_ENVIRONMENT=testnet
@@ -94,6 +95,7 @@ X402_PAYMENT_ADDRESS=0xYourBaseSepoliaAddress
 ```
 
 2. **Configure Authentication** (optional - for Privy bypass):
+
 ```bash
 # Optional: Only needed if using Privy authentication
 PRIVY_APP_ID=your_app_id
@@ -101,6 +103,7 @@ PRIVY_VERIFICATION_KEY="your_public_key"
 ```
 
 3. **Get CDP Credentials** from [Coinbase Portal](https://portal.cdp.coinbase.com) (for embedded wallets):
+
 ```bash
 CDP_PROJECT_ID=your_project
 ```
@@ -108,6 +111,7 @@ CDP_PROJECT_ID=your_project
 #### Mainnet Setup (Production)
 
 1. **Enable x402 on mainnet**:
+
 ```bash
 X402_ENABLED=true
 X402_ENVIRONMENT=mainnet
@@ -115,6 +119,7 @@ X402_PAYMENT_ADDRESS=0xYourBaseMainnetAddress
 ```
 
 2. **REQUIRED: Get CDP API Credentials** from [CDP API Portal](https://portal.cdp.coinbase.com/access/api):
+
 ```bash
 CDP_API_KEY_ID=your_key_id
 CDP_API_KEY_SECRET=your_key_secret
